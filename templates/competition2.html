@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>运动数据分析</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            height: 100vh;
+            font-family: 'Segoe UI', system-ui;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 15px;
+        }
+
+        #animationCanvas {
+            height: 35vh;
+            min-height: 220px;
+            flex-shrink: 0;
+        }
+
+        #poseImage {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #resultData {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        #dataAnalysis {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            margin-bottom: 100px; /* 为按钮保留空间 */
+        }
+
+        .button-group {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.3) 70%);
+        }
+
+        .data-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            color: #eee;
+            font-size: 0.9rem;
+            margin: 6px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: rgba(108, 117, 125, 0.95);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: rgba(76, 84, 225, 0.95);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="animationCanvas">
+            <img id="poseImage" src="" alt="姿态动画">
+        </div>
+
+        <h1 style="color: #ddd; margin: 15px 0 10px; text-align: left;">数据分析</h1>
+
+        <div id="resultData">
+            <div id="dataAnalysis"></div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="window.location.href='/generate_report'">生成报告</button>
+            <button style="margin-top: 10px;" onclick="goBack()">返回首页</button>
+        </div>
+    </div>
+
+    <script>
+        const MAX_ITEMS = 8;
+        let lastDataHash = null;
+        let dataInterval;
+
+        // 智能数据哈希生成
+        function getDataHash(data) {
+            const keyMetrics = [
+                data.attacks_count,
+                Math.round(data.sum_distance * 100),
+                Math.round(data.right_hand_angle)
+            ];
+            return keyMetrics.join('|');
+        }
+
+        function updateData(data) {
+
+            // 获取当前数据特征码
+            const currentHash = getDataHash(data) 
+            document.getElementById('poseImage').src = 'data:image/png;base64,' + data.img_base64;
+
+            // 仅当数据变化时才更新
+            if (currentHash !== lastDataHash && currentHash !== 0) {
+
+                lastDataHash = currentHash
+                
+                // 创建新的条目
+                const container = document.getElementById('dataAnalysis')
+                    
+                // 创建新数据项
+                const newItem = document.createElement('div')
+                newItem.className = 'data-item'
+                newItem.innerHTML = `
+                        <div class="row">
+                        <div class="half"><span class="label">进攻次数：</span>${data.attacks_count}</div>
+                    </div>
+                    <div class="row">
+                        <div class="half"><span class="label">移动距离：</span>${data.sum_distance}</div>
+                        <div class="half"><span class="label">右手角度：</span>${data.right_hand_angle}°</div>
+                    </div>
+                    <div class="row">
+                        <div class="half"><span class="label">右脚夹角：</span>${data.right_ankle_angle}</div>
+                        <div class="half"><span class="label">左脚夹角：</span>${data.left_ankle_angle}</div>
+                    </div>
+                    <div class="row">
+                        <div class="half"><span class="label">右膝夹角：</span>${data.right_knee_angle}</div>
+                        <div class="half"><span class="label">左膝夹角：</span>${data.left_knee_angle}</div>
+                    </div>
+                    <div class="row">
+                        <div class="half"><span class="label">右肩坐标：</span>${data.right_shoulder}</div>
+                        <div class="half"><span class="label">左肩坐标：</span>${data.left_shoulder}</div>
+                    </div>
+                    <div class="row">
+                        <div class="half"><span class="label">右臀坐标：</span>${data.right_hip}</div>
+                        <div class="half"><span class="label">左臀坐标：</span>${data.left_hip}</div>
+                    </div>
+                `;
+
+                // 添加新条目到顶部
+                container.insertBefore(newItem, container.firstChild)
+                
+                // 保持最多显示条数
+                if (container.children.length > MAX_ITEMS) {
+                    container.removeChild(container.lastChild)
+                }
+            }
+
+            }
+
+        // 数据更新核心逻辑
+        // function updateData(data) {
+        //     const hash = getDataHash(data);
+        //     document.getElementById('poseImage').src = 'data:image/png;base64,' + data.img_base64;
+
+        //     if (hash && hash !== lastDataHash) {
+        //         lastDataHash = hash;
+        //         addDataEntry(data);
+        //     }
+        // }
+
+        // // 生成数据条目
+        // function addDataEntry(data) {
+        //     const container = document.getElementById('dataAnalysis');
+        //     const scrollThreshold = 100; // 自动滚动的阈值
+
+        //     const wasScrolledToTop = container.scrollTop === 0;
+
+        //     const newItem = document.createElement('div');
+        //     newItem.className = 'data-item';
+        //     newItem.innerHTML = `
+        //         <div class="row">
+        //                 <div class="half"><span class="label">进攻次数：</span>${data.attacks_count}</div>
+        //             </div>
+        //             <div class="row">
+        //                 <div class="half"><span class="label">移动距离：</span>${data.sum_distance}</div>
+        //                 <div class="half"><span class="label">右手角度：</span>${data.right_hand_angle}°</div>
+        //             </div>
+        //             <div class="row">
+        //                 <div class="half"><span class="label">右脚夹角：</span>${data.right_ankle_angle}</div>
+        //                 <div class="half"><span class="label">左脚夹角：</span>${data.left_ankle_angle}</div>
+        //             </div>
+        //             <div class="row">
+        //                 <div class="half"><span class="label">右膝夹角：</span>${data.right_knee_angle}</div>
+        //                 <div class="half"><span class="label">左膝夹角：</span>${data.left_knee_angle}</div>
+        //             </div>
+        //             <div class="row">
+        //                 <div class="half"><span class="label">右肩坐标：</span>${data.right_shoulder}</div>
+        //                 <div class="half"><span class="label">左肩坐标：</span>${data.left_shoulder}</div>
+        //             </div>
+        //             <div class="row">
+        //                 <div class="half"><span class="label">右臀坐标：</span>${data.right_hip}</div>
+        //                 <div class="half"><span class="label">左臀坐标：</span>${data.left_hip}</div>
+        //             </div>
+        //     `;
+
+        //     container.insertBefore(newItem, container.firstChild);
+
+        //     // 保持最大条目数
+        //     while (container.children.length > MAX_ITEMS) {
+        //         container.removeChild(container.lastChild);
+        //     }
+
+        //     // 自动滚动控制
+        //     if (wasScrolledToTop || container.scrollTop < scrollThreshold) {
+        //         container.scrollTop = 0;
+        //     }
+        // }
+
+        // 初始化数据拉取
+        function startDataFetching() {
+            if (dataInterval) clearInterval(dataInterval);
+            dataInterval = setInterval(() => {
+                fetch('/data')
+                    .then(response => response.json())
+                    .then(updateData)
+                    .catch(error => console.error('数据获取失败:', error));
+            }, 100); // 适当调整轮询间隔
+        }
+
+        // 返回首页
+        function goBack() {
+            clearInterval(dataInterval);
+            window.location.href = '/';
+        }
+
+        // 页面加载初始化
+        window.onload = startDataFetching;
+    </script>
+</body>
+</html>

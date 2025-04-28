@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <!-- 设置网页标题 -->
+    <title>击剑动作分析系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-repeat: no-repeat; /* 避免图片重复 */
+            background-position: center 40%; /* 将图片在垂直方向向下移动50% */
+        }
+        .container {
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 1.2em;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 2px solid #6c757d;
+            align-items: center;
+            /* border-radius: 10px; */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            text-align: center;
+            background-blend-mode: lighten; /* 添加这行代码 */
+            background-color: rgba(255, 255, 255, 0.1); /* 添加这行代码，白色半透明背景与图片混合 */
+        }
+        
+            
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px; /* 为按钮留出空间 */
+        }
+        .title_container {
+            width: 100%;
+            margin: 0 0;
+            padding: 0 0;
+        }
+        .smart-judge-btn {
+            background-color: #ff6347;
+            width: 25%;
+            color: #fff;
+            align-self: flex-start;
+            padding: 5px 5px; /* 减小按钮的内边距 */
+            padding-left: -20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.7em; /* 进一步减小按钮字体大小 */
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* 悬停时背景色变化 */
+            display: inline-block; /* 使按钮内联显示，但允许设置宽高 */
+            vertical-align: middle; /* 垂直居中对齐 */
+        }
+        .smart-judge-btn:hover {
+            background-color: #ff4500; /* 悬停时背景色变深 */
+        }
+        .arrow-icon {
+            display: none; /* 隐藏箭头图标，因为它在当前布局中可能不再需要 */
+        }
+        input[type="file"], select, input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            height: 34px;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between; /* 添加间距 */
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #868e96;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1e1e1e;
+        }
+        video {
+            width: 100%;
+            border-radius: 5px;
+        }
+        .preview-container {
+            width: 100%;
+            padding: 0.5em 0;
+        }
+        .form-label, .container label {
+            margin: 5px; color: #6c757d; padding-top: 3px;
+            width: 100%;
+            text-align: left;
+            display: block;
+            font-size: 0.8em;
+            font-weight: 400;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="color: #ddd;">击剑动作分析</h1>
+
+        <button class="smart-judge-btn" style="margin: 6px;" type="button" 
+        onclick="goToScorePage()">智能裁判</button>
+
+    <!-- 创建uploadForm表单，收集用户信息 -->
+    <form id="uploadForm" style="margin: 10px 0; width: 100%;"
+    action="/upload" method="post" enctype="multipart/form-data">
+        <!-- 收集video文件 -->
+        <label for="videoInput" style="color: #6c757d; margin-top: 5px;">选择视频或照片:</label>
+        <!-- 增加style -->
+        <input type="file" style="color: rgb(157, 154, 154);" id="videoInput" name="video" accept="video/*,image/*" 
+required>
+<!-- 添加画布用于显示实时分析结果 -->
+    <!-- 增加视频预览 -->
+    <div class="preview-container" >
+        <!-- <h3>视频预览</h3> -->
+        <video id="videoPreview" class="preview-video" controls></video>
+        <div id="videoInfo" class="file-info"></div>
+    </div>
+        <!-- 设置下拉选择菜单，收集人物位置 -->
+
+        <!-- <label style="margin: -5px; color: #6c757d; padding-top: 20px;" for="sideInput" co>选择人物位置:</label> -->
+        <h5 class="form-label" for="sideInput" co>选择人物位置:</h5>
+        <select id="sideInput" name="side">
+            <option value="0">单人视频</option>
+            <option value="1">左边人物</option>
+            <option value="2">右边人物</option>
+        </select><br>
+        <!-- 设置数字输入，收集用户身高 -->
+        <h5 class="form-label" for="heightInput">输入身高 (cm):</h5>
+        <input type="number" id="heightInput" name="height" 
+value="170" required ><br>
+
+        <!-- 创建*上传视频*按钮，点击后运行submitForm函数      增加style-->
+        <button style="margin: 0.5em 0" type="button" 
+        onclick="submitForm('competition')">比赛分析(视频)</button>
+        <button style="margin: 0.5em 0" type="button" 
+        onclick="submitForm('analysis')">动作分析(照片)</button>
+        <input type="hidden" id="fileType" name="fileType">
+    </form>
+     <!-- 结束表单 -->
+    </div>
+
+    <script>
+        //智能裁判按钮
+        function goToScorePage() {
+        // 可以在这里添加一些逻辑，比如传递参数等
+        window.location.href = '/score'; // 假设有一个score路由
+    }
+
+    
+        // 视频预览
+        document.getElementById('videoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const videoURL = URL.createObjectURL(file);
+                document.getElementById('videoPreview').src = videoURL;
+                document.getElementById('fileType').value = file.type; // 存储文件类型
+            }
+        });
+
+        function submitForm(buttonType) {
+      
+            const videoInput = document.getElementById('videoInput');
+            const fileType = document.getElementById('fileType').value;
+
+            if (videoInput.value === '') {
+                alert('请先选择一个视频文件或照片');
+                return;
+            }
+
+            if (buttonType === 'competition' && !fileType.startsWith('video/')) {
+                alert('比赛分析只能上传视频文件');
+                return;
+            }
+
+            if (buttonType === 'analysis' && !fileType.startsWith('image/')) {
+                alert('动作分析只能上传照片文件');
+                return;
+            }
+            const formData = new FormData(document.getElementById('uploadForm'));
+            formData.append('button_type', buttonType);
+            formData.append('file_type', fileType); // 添加文件类型
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (buttonType === 'competition') {
+                    window.location.href = `/competition?video_path=${encodeURIComponent(data.video_path)}&side=${data.side}&height=${data.height}`;
+                    
+                } else if (buttonType === 'analysis') {
+                    window.location.href = `/analysis?video_path=${encodeURIComponent(data.video_path)}&side=${data.side}&height=${data.height}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+    </script>
+</body>
+</html>

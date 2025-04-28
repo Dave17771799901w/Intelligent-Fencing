@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>动作分析页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
+            min-height: 100vh;  /* 仍保持最小高度 */
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-repeat: no-repeat; /* 避免图片重复 */
+            background-position: center 40%; /* 将图片在垂直方向向下移动50% */
+        }
+        .container {
+            background-blend-mode: lighten; /* 添加这行代码 */
+            background-color: rgba(255, 255, 255, 0.1); /* 添加这行代码，白色半透明背景与图片混合 */
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 1.2em;
+            padding-bottom: 40px; /* 增加底部空间防止内容被裁切 */
+            border: 2px solid #6c757d;
+            /* border-radius: 10px; */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            /* height: 100vh; */
+            min-height: 100vh;  /* 允许内容扩展 */
+            overflow-y: auto;  /* 添加滚动条 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        h1 { color: #333; font-size: 20px; padding-right: 200px;}
+        button {
+             background-color: #5c67f2; 
+             color: white; 
+             border: none; 
+             padding: 10px 20px; 
+             border-radius: 5px; 
+             cursor: pointer; 
+             /* margin: 5px 0 !important; 强制按钮垂直间距为5px */
+            }
+        button:hover { background-color: #4a54e1; }
+        input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        #videoPlayer {
+            width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #keypointData {
+            /* flex:1; */
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            width: 100%;
+            flex: none;  /* 禁用flex扩展 */
+            padding-bottom: 20px;  /* 底部留白 */
+        }
+        #dataAnalysis {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            /* padding: 10px 10px 4px; */
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            min-height: 130px; /* 设置最小高度以确保框的可见性 */
+            color: #ddd;
+            font-size: 1rem;
+            box-sizing: border-box;
+            text-align: left;
+            max-height: 100%;
+            overflow: auto;
+            background:rgba(255, 255, 255, 0.3)
+        }
+        #dataAnalysis div {
+            margin-bottom: 6px;
+        }
+
+        #animationCanvas {
+            width: 100%;
+            /* height: 200px; */
+            border: 1px solid #ddd;
+            background-color: transparent;
+            height: auto !important;  /* 重要：强制自适应高度 */
+            flex-shrink: 0;  /* 防止图片缩小 */
+            margin-bottom: 20px;  /* 添加底部间隔 */
+        }
+
+        /* 修改图片样式 */
+        #poseImage {
+            width: 100%;
+            height: auto !important;  /* 基础自适应 */
+            max-height: 70vh;  /* 限制最大高度 */
+            object-fit: contain;  /* 保持比例 */
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <!-- <h1>上传视频</h1>
+        <input type="file" id="videoUpload"> -->
+        <!-- <video style="margin-top: 10px;" id="videoPlayer" controls></video> -->
+        <div id="animationCanvas" style="height: auto">
+            <img id="poseImage" src="" alt="Pose Animation" style="width: 100%; height: auto;">
+        </div>
+        <h1 style="color: #ddd; text-align: left;">关键点数据</h1>
+        <div id="keypointData" style="margin-top: 20px">
+            <div id="dataAnalysis" >
+                <!-- <p>检测动作： <span id="action"></span></p> -->
+                <div>检测动作： <span id="action"></span></div>
+               <div>动作得分： <span id="action-accuracy"></div>
+                <div>右手角度： <span id="rightHandAngle"></div>
+                <div>右肩坐标： <span id="rightShoulder"></div>
+                <div>左肩坐标： <span id="leftShoulder"></div>
+                <div>右臀坐标： <span id="rightHip"></span></div>
+                <div>左臀坐标： <span id="leftHip"></div>
+            </div>
+        </div>
+
+        
+        <!-- <button style="background-color: #868e96; color: #ddd; width: 100%;" onclick="window.location.href='/download_report'">生成报告</button> -->
+        <!-- <button style="background-color: #868e96; color: #ddd; width: 100%;" onclick="window.location.href='/generate_report'">生成报告</button> -->
+        <!-- <button style="background-color: #868e96; color: #ddd; width: 100%; margin-top: 20px;" onclick="analyzeAction()">生成报告</button> -->
+        <button style="background-color: #868e96; color: #ddd; width: 100%; margin-top: 10px;" onclick="generateActionReport()">动作分析报告</button>
+        <button style="background-color: #868e96; color: #ddd; width: 100%; margin-top: 10px;" onclick="goBack()">返回首页</button>
+    </div>
+    <script>
+
+        let dataInterval;// 定义一个变量来存储定时器的引用
+
+        // function generateReport() { window.location.href = 'report.html'; }
+        function goBack() {window.location.href = '/';}
+
+        function updateData(data) {
+            document.getElementById('rightHandAngle').textContent = 
+            data.right_hand_angle;
+            document.getElementById('rightShoulder').textContent = 
+            data.right_shoulder;
+            document.getElementById('leftShoulder').textContent = 
+            data.left_shoulder;
+            document.getElementById('rightHip').textContent = 
+            data.right_hip;
+            document.getElementById('leftHip').textContent = 
+            data.left_hip;
+            // document.getElementById('animationCanvas').textContent = 
+            // data.img_base64;
+            document.getElementById('poseImage').src = 
+            'data:image/png;base64,' + data.img_base64;
+            document.getElementById('action-accuracy').textContent = 
+            data.standardaction;
+            document.getElementById('action').textContent =
+            data.action;
+        }
+
+
+
+        // 设置定时器，每秒向服务器请求最新数据
+        // setInterval(() => {
+        //     fetch('/data')
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         updateData(data);
+        //     })
+        //     .catch(error => {
+        //         console.error('Error:', error);
+        //     });
+        // }, 100); // 每秒更新一次数据
+
+        function startDataFetching() {
+            // 停止之前的定时器
+            if (dataInterval) {
+                clearInterval(dataInterval);
+            }
+
+        // 设置定时器，每秒向服务器请求最新数据
+        setInterval(() => {
+            fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                updateData(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }, 100); // 每秒更新一次数据
+    }
+
+        // 在页面加载时启动数据请求
+        window.onload = startDataFetching;
+
+        // 在返回首页时停止定时器
+        function goBack() {
+            clearInterval(dataInterval);
+            window.location.href = '/';
+        }
+
+
+function generateActionReport() {
+        // 直接跳转到生成报告的页面
+        window.location.href = '/report';
+    }
+
+
+    </script>
+</body>
+</html>

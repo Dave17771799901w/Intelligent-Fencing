@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报告页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-repeat: no-repeat; /* 避免图片重复 */
+            background-position: center 40%; /* 将图片在垂直方向向下移动50% */
+        }
+        .container {
+            background-blend-mode: lighten; /* 添加这行代码 */
+            background-color: rgba(255, 255, 255, 0.1); /* 添加这行代码，白色半透明背景与图片混合 */
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 1.2em;
+            border: 2px solid #6c757d;
+           /* border-radius: 10px; */
+           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px; padding-right: 200px;
+        }
+        .report-content {
+            flex:1;
+            display: flex;
+            align-items: center;
+        
+        }
+        #reportContent {
+            margin-bottom: 20px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            color: #ddd;width: 100%;
+            color: #ddd;
+            font-size: 0.8rem;
+            min-height: 200px; /* Set a minimum height for the report content */
+        }
+        .report-content p {
+            text-align: left; /* 确保文本左对齐 */
+            margin-left: 20px; /* 增加左边的外边距 */
+        }
+        button {
+            background-color: #868e96;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 3px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1e1e1e;
+        }
+        a {
+            color: #1e1e1e;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- <h1>生成的报告</h1> -->
+         <div class="report-content">
+            <div  id="reportContent">
+                <p>进攻次数: <span id="attacksCount"></span></p>
+                <p>移动距离: <span id="sumDistance"></span></p>
+                <p>右手夹角: <span id="rightHandAngle"></span></p>
+                <p>右脚夹角: <span id="rightAnkleAngle"></span></p>
+                <p>左脚夹角: <span id="leftAnkleAngle"></span></p>
+                <p>右膝夹角: <span id="rightKneeAngle"></span></p>
+                <p>左膝夹角: <span id="leftKneeAngle"></span></p>
+                <p>右肩坐标: <span id="rightShoulder"></span></p>
+                <p>左肩坐标: <span id="leftShoulder"></span></p>
+                <p>右臀坐标: <span id="rightHip"></span></p>
+                <p>左臀坐标: <span id="leftHip"></span></p>
+                <p>动作标准度: <span id="standardaction"></span></p>
+                <p>动作类型: <span id="action"></span></p>
+                <p>报告内容</p>
+            </div>
+         </div>
+      
+        <a href="/download_report">
+        <button>下载报告(.pdf)</button>
+        </a>
+    </div>
+    <!-- <script>
+        // 从 URL 参数中获取姿态识别数据
+        const urlParams = new URLSearchParams(window.location.search);
+        const poseData = JSON.parse(urlParams.get('pose_data'));
+// 更新报告内容
+    document.getElementById('attacksCount').textContent = poseData.attacks_count;
+    document.getElementById('sumDistance').textContent = poseData.sum_distance;
+    document.getElementById('rightHandAngle').textContent = poseData.right_hand_angle;
+    document.getElementById('rightAnkleAngle').textContent = poseData.right_ankle_angle;
+    document.getElementById('leftAnkleAngle').textContent = poseData.left_ankle_angle;
+    document.getElementById('rightKneeAngle').textContent = poseData.right_knee_angle;
+    document.getElementById('leftKneeAngle').textContent = poseData.left_knee_angle;
+    document.getElementById('rightShoulder').textContent = poseData.right_shoulder;
+    document.getElementById('leftShoulder').textContent = poseData.left_shoulder;
+    document.getElementById('rightHip').textContent = poseData.right_hip;
+    document.getElementById('leftHip').textContent = poseData.left_hip;
+    document.getElementById('standardaction').textContent = poseData.standardaction;
+    document.getElementById('action').textContent = poseData.action;
+</script> -->
+</body>
+</html>

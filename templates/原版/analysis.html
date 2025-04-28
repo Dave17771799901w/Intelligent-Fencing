@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动作分析页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-repeat: no-repeat; /* 避免图片重复 */
+            background-position: center 40%; /* 将图片在垂直方向向下移动50% */
+        }
+        .container {
+            background-blend-mode: lighten; /* 添加这行代码 */
+            background-color: rgba(255, 255, 255, 0.1); /* 添加这行代码，白色半透明背景与图片混合 */
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 30px;
+            border: 2px solid #6c757d;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            height: 600px;
+            text-align: center;
+        }
+        h1 { color: #333; font-size: 20px; padding-right: 200px;}
+        button { background-color: #5c67f2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #4a54e1; }
+        input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        #videoPlayer {
+            width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #keypointData {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            min-height: 160px; /* 设置最小高度以确保框的可见性 */
+        }
+
+        #animationCanvas {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #ddd;
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <!-- <h1>上传视频</h1>
+        <input type="file" id="videoUpload"> -->
+        <!-- <video style="margin-top: 10px;" id="videoPlayer" controls></video> -->
+        <div id="animationCanvas">
+            <img id="poseImage" src="" alt="Pose Animation" style="width: 100%; height: auto;">
+        </div>
+        <h1 style="color: #ddd;">关键点数据</h1>
+        <div id="keypointData">
+            <div id="dataAnalysis" style="color: #ddd; float: left;" >
+                <!-- <p>检测动作： <span id="action"></span></p> -->
+                检测动作： <span id="action"></span><br>
+                动作得分： <span id="action-accuracy"></span><br>
+                右手角度： <span id="rightHandAngle"></span><br>
+                右肩坐标： <span id="rightShoulder"></span><br>
+                左肩坐标： <span id="leftShoulder"></span><br>
+                右臀坐标： <span id="rightHip"></span><br>
+                左臀坐标： <span id="leftHip"></span><br>
+            </div>
+        </div>
+
+        
+        <button style="background-color: #868e96; color: #ddd; width: 100%;" onclick="generateReport()">生成报告</button>
+        <button style="background-color: #868e96; color: #ddd; width: 100%; margin-top: 20px;" onclick="goBack()">返回首页</button>
+    </div>
+    <script>
+        function generateReport() { window.location.href = 'report.html'; }
+        function goBack() {window.location.href = '/';}
+
+        function updateData(data) {
+            document.getElementById('rightHandAngle').textContent = 
+            data.right_hand_angle;
+            document.getElementById('rightShoulder').textContent = 
+            data.right_shoulder;
+            document.getElementById('leftShoulder').textContent = 
+            data.left_shoulder;
+            document.getElementById('rightHip').textContent = 
+            data.right_hip;
+            document.getElementById('leftHip').textContent = 
+            data.left_hip;
+            // document.getElementById('animationCanvas').textContent = 
+            // data.img_base64;
+            document.getElementById('poseImage').src = 
+            'data:image/png;base64,' + data.img_base64;
+            document.getElementById('action-accuracy').textContent = 
+            data.standardaction;
+            document.getElementById('action').textContent =
+            data.action;
+        }
+
+        // 设置定时器，每秒向服务器请求最新数据
+        setInterval(() => {
+            fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                updateData(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }, 100); // 每秒更新一次数据
+    </script>
+</body>
+</html>

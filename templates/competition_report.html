@@ -1,0 +1,222 @@
+<!-- report.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动作分析报告</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center 40%;
+        }
+        .container {
+            background-blend-mode: lighten;
+            background-color: rgba(255, 255, 255, 0.1);
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 1.2em;
+            border: 2px solid #6c757d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        #reportContainer {
+            max-width: 95%;
+            width: fit-content;
+            margin: 20px 0;
+        }
+
+        #actionReport {
+            width: 100%;
+            height: auto;
+            max-width: 1000px;
+            border: 2px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+        }
+
+        /* 下载按钮样式 */
+        .report-image-wrapper {
+            position: relative;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #downloadBtn {
+            position: absolute;
+            bottom: 25px;
+            /* right: 25px; */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 25px;
+            background: linear-gradient(145deg, #828b8f, #a3aab1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        #downloadBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(33,150,243,0.3);
+            background: linear-gradient(145deg, hwb(200 25% 74%), #a7a0a0);
+        }
+
+        #downloadBtn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            #actionReport {
+                max-width: 100%;
+            }
+            #downloadBtn {
+                bottom: 15px;
+                /* right: 15px; */
+                padding: 8px 16px;
+                left: calc(50% - 25px);
+                /* font-size: 13px; */
+                transform: translateX(-45%);
+            }
+        }
+
+        /* 增加加载完成后的动画效果 */
+        #downloadBtn.loaded {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="systemPanel"></div>
+        <div id="reportContainer">
+            <h1 style="margin-bottom: 1em; color: #ddd;" >动作分析报告</h1>
+            <div class="report-image-wrapper">
+                <img id="actionReport" src="/generate_competition_report" alt="Action Analysis Report">
+                <button id="downloadBtn" onclick="handleDownload()">
+                    <span class="icon">⬇️</span> 下载报告
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentReportBlob = null;
+        let reportController = null;
+
+        async function loadReport() {
+            try {
+                reportController = new AbortController();
+                const response = await fetch('/generate_competition_report', { 
+                    signal: reportController.signal 
+                }).catch(err => {
+                    if (err.name === 'AbortError') console.log('Fetch aborted');
+                });
+                
+                if (!response || !response.ok) return;
+                
+                const blob = await response.blob();
+                currentReportBlob = blob;
+                
+                // 更新图片并释放旧URL
+                const oldUrl = document.getElementById('actionReport').src;
+                const newUrl = URL.createObjectURL(blob);
+                document.getElementById('actionReport').src = newUrl;
+                if (oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+                
+                // 更新按钮状态
+                document.getElementById('downloadBtn').classList.add('loaded');
+                document.getElementById('downloadBtn').disabled = false;
+
+            } catch (err) {
+                document.getElementById('downloadBtn').classList.remove('loaded');
+                if (err.name !== 'AbortError') {
+                    console.error('报告加载失败:', err);
+                    showHardwareDiagnosis();
+                }
+            } finally {
+                reportController = null;
+            }
+        }
+
+        function handleDownload() {
+            if (!currentReportBlob) {
+                alert('请等待报告加载完成');
+                return;
+            }
+            
+            const now = new Date();
+            const filename = `击剑分析报告_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.png`;
+            
+            const tempLink = document.createElement('a');
+            tempLink.href = URL.createObjectURL(currentReportBlob);
+            tempLink.download = filename;
+            tempLink.style.display = 'none';
+
+            tempLink.addEventListener('click', () => {
+                setTimeout(() => {
+                    URL.revokeObjectURL(tempLink.href);
+                    tempLink.remove();
+                }, 100);
+            });
+
+            document.body.appendChild(tempLink);
+            tempLink.click();
+        }
+
+        // 辅助函数：数字补零
+        function pad(n) {
+            return n.toString().padStart(2, '0');
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && reportController) {
+                reportController.abort();
+            }
+        });
+
+        // 初始化加载
+        loadReport();
+    </script>
+</body>
+</html>

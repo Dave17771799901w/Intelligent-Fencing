@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比赛页面</title>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #f4f4f9;
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-repeat: no-repeat; /* 避免图片重复 */
+            background-position: center 40%; /* 将图片在垂直方向向下移动50% */
+        }
+        .container {
+            background-blend-mode: lighten; /* 添加这行代码 */
+            background-color: rgba(255, 255, 255, 0.1); /* 添加这行代码，白色半透明背景与图片混合 */
+            background: transparent;
+            background-image: url('https://img1.baidu.com/it/u=2505141862,3034846570&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=749');
+            background-size: cover;
+            padding: 1.2em;
+            border: 2px solid #6c757d;
+            /* border-radius: 10px; */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+            
+        h1 { color: #333;
+            margin-bottom: 20px;  font-size: 20px; padding-right: 200px;}
+        button { background-color: #5c67f2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #4a54e1; }
+        video { width: 100%; border-radius: 5px; }
+        
+        #resultData {
+            flex:1;
+            overflow: hidden;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        #dataAnalysis {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px 10px 4px;
+            background-color: rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            min-height: 130px; /* 设置最小高度以确保框的可见性 */
+            color: #ddd;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            text-align: left;
+            max-height: 100%;
+            overflow: auto;
+        }
+        #dataAnalysis>div {
+            margin-bottom: 6px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between; /* 使左右两部分各占一半 */
+            align-items: center;
+            margin-bottom: 5px; /* 行与行之间的间隔 */
+            color: #ddd;
+        }
+
+        .center {
+            justify-content: center; /* 居中对齐 */
+        }
+
+        .left {
+            justify-content: flex-start; /* 左对齐 */
+        }
+
+        .half {
+            flex: 1; /* 每个半部分占据一半宽度 */
+            display: flex;
+            align-items: center;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-right: 1px; /* 标签和值之间的间隔 */
+        }
+
+        #animationCanvas {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #ddd;
+            background-color: transparent;
+        }
+        
+    </style>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js">
+    </script>
+
+</head>
+<body>
+    <div class="container">
+        <!-- <video controls width="100%"></video> -->
+        <div id="animationCanvas">
+            <img id="poseImage" src="" alt="Pose Animation" style="width: 100%; height: auto;">
+        </div>
+
+        <h1 style="color: #ddd; margin-left: -5px; text-align: left;" >数据分析</h1>
+        <div id="resultData">
+            <div id="dataAnalysis">
+                <div class="row">
+                    <div class="half">
+                    <span class="label">进攻次数：</span>
+                    <span class="value" id="attacksCount"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="half">
+                        <span class="label">移动距离：</span>
+                        <span class="value" id="sumDistance"></span>
+                    </div>
+                    <div class="half">
+                        <span class="label">右手夹角：</span>
+                        <span class="value" id="rightHandAngle"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="half">
+                        <span class="label">右脚夹角：</span>
+                        <span class="value" id="rightAnkleAngle"></span>
+                    </div>
+                    <div class="half">
+                        <span class="label">左脚夹角：</span>
+                        <span class="value" id="leftAnkleAngle"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="half">
+                        <span class="label">右膝夹角：</span>
+                        <span class="value" id="rightKneeAngle"></span>
+                    </div>
+                    <div class="half">
+                        <span class="label">左膝夹角：</span>
+                        <span class="value" id="leftKneeAngle"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="half">
+                    <span class="label">右肩坐标：</span>
+                    <span class="value" id="rightShoulder"></span>
+                    </div>
+                    <div class="half">
+                        <span class="label">左肩坐标：</span>
+                        <span class="value" id="leftShoulder"></span>
+                    </div>
+                </div>
+                <div class="row ">
+                    <div class="half">
+                        <span class="label">右臀坐标：</span>
+                        <span class="value" id="rightHip"></span>
+                    </div>
+                <div class="half">
+                    <span class="label">左臀坐标：</span>
+                    <span class="value" id="leftHip"></span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- <div id="animationCanvas">
+            <img id="poseImage" src="" alt="Pose Animation" style="width: 100%; height: auto;">
+        </div> -->
+    </div>
+
+    <button style="background-color: #868e96; color: #ddd; width: 100%;" onclick="window.location.href='/download_report'">生成报告</button>
+    <button style="background-color: #868e96; color: #ddd; width: 100%; margin-top: 20px;" onclick="goBack()">返回首页</button>
+    <script>
+        let dataInterval;// 定义一个变量来存储定时器的引用
+
+
+        function generateReport() { window.location.href = '/report'; }
+        function goBack() {window.location.href = '/';}
+    
+        function updateData(data) {
+            document.getElementById('attacksCount').textContent = 
+            data.attacks_count;
+            document.getElementById('sumDistance').textContent = 
+            data.sum_distance;
+            document.getElementById('rightHandAngle').textContent = 
+            data.right_hand_angle;
+            document.getElementById('rightAnkleAngle').textContent = 
+            data.right_ankle_angle;
+            document.getElementById('leftAnkleAngle').textContent = 
+            data.left_ankle_angle;
+            document.getElementById('rightKneeAngle').textContent = 
+            data.right_knee_angle;
+            document.getElementById('leftKneeAngle').textContent = 
+            data.left_knee_angle;
+            document.getElementById('rightShoulder').textContent = 
+            data.right_shoulder;
+            document.getElementById('leftShoulder').textContent = 
+            data.left_shoulder;
+            document.getElementById('rightHip').textContent = 
+            data.right_hip;
+            document.getElementById('leftHip').textContent = 
+            data.left_hip;
+            document.getElementById('poseImage').src = 'data:image/png;base64,' + data.img_base64;
+            // poseData = data;  // 存储数据
+        }
+
+        function startDataFetching() {
+            // 停止之前的定时器
+            if (dataInterval) {
+                clearInterval(dataInterval);
+            }
+
+        // 设置定时器，每秒向服务器请求最新数据
+        setInterval(() => {
+            fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                updateData(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }, 100); // 每秒更新一次数据
+    }
+
+        // 在页面加载时启动数据请求
+        window.onload = startDataFetching;
+
+        // 在返回首页时停止定时器
+        function goBack() {
+            clearInterval(dataInterval);
+            window.location.href = '/';
+        }
+
+    </script>
+</body>
+</html>
